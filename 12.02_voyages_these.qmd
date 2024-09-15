@@ -1,0 +1,296 @@
+---
+title: "17.02_voyages_these"
+author: "bcn"
+format: html
+editor: visual
+---
+
+
+```{r global_options, message=FALSE, warning=FALSE, include=FALSE}
+
+knitr::opts_chunk$set(
+    message = FALSE,
+    warning = FALSE,
+    cache = TRUE,
+    tidy = FALSE,
+    fig.width = 15,
+    fig.height = 7,
+    out.width = "65%")
+
+## This is just to "pre-load" all packages, and prevent the startup
+## messages to show
+
+library("ggplot2")
+library("sf")
+library("rnaturalearth")
+library("rnaturalearthdata")
+library("ggspatial")
+library("maps")
+library("tools")
+library("googleway")
+library("ggrepel")
+
+library("rnaturalearth")
+library("rnaturalearthdata")
+
+library("readxl")
+library("dplyr")
+
+```
+
+```{r further_options, eval=FALSE, include=FALSE}
+
+install.packages(c("cowplot", "googleway", "ggplot2", "ggrepel",  "dplyr",
+    "ggspatial", "lwgeom", "rnaturalearth", "sf",
+    "rnaturalearthdata","viridis", "maps","tidyverse", "egg"))
+
+# requires , "xlsx"
+
+if (!require("countrycode")) install.packages("countrycode", dependencies = TRUE)
+install.packages("diffdf")
+
+```
+
+```{r further_options2, message=FALSE, warning=FALSE, include=FALSE}
+library("ggplot2")
+theme_set(theme_bw())
+library("sf")
+library("rnaturalearth")
+library("rnaturalearthdata")
+library("countrycode") # get ISO code from country names
+
+library(readxl)
+library(janitor)
+library(viridis)
+library(dplyr)    # To assist with cleaning and organizing data
+library(tidyverse)  
+library(maps)  
+library(tools)
+library(egg)
+library(ggrepel)
+# library("xlsx") requires java
+library(RColorBrewer)
+library ("diffdf")
+
+```
+
+```{r DisplayMapProc, include=FALSE}
+
+# Déclaration de la procédure --------------------------------------------------
+# DisplayMap
+
+DisplayMap <- function(world, target_crs, StatesGeometry, FillClass, MapTitle, MapSubtitle, MapCaption, LegendTitle, LegendLabels, LegendPalette) {
+
+StatesGeometry <- cbind(StatesGeometry, st_coordinates(st_centroid(StatesGeometry)))
+
+DisplayMapReturnValue <- world %>%
+  filter(admin != "Antarctica") %>%
+  st_transform(crs = target_crs) %>%
+  ggplot() +
+  geom_sf(color = "white", fill= "lightgrey") +
+  geom_sf(data = StatesGeometry, aes(fill = FillClass), color ="white") +
+  coord_sf(datum = NA) + # no graticule
+# scale_fill_manual(values = LegendPalette) +
+# scale_fill_discrete(name = LegendTitle, labels = LegendLabels) +
+  scale_fill_viridis_d(
+    option = "rocket",
+    name = LegendTitle,
+    direction = -1,
+    begin = .17,
+    end = .97,
+    labels = c("GlobalNorthSupporting"="Global North - Support: ", 
+                 "GlobalNorthObserverSupporting" = "Global North - Support, Observer: ", 
+                 "GlobalNorthNonSupporting" = "Global North - No Support: ", 
+                 "GlobalNorthObserverNonSupporting" = "Global North - No Support, Observer: ", 
+                 "GlobalSouthSupporting" = "Global South - Support: ", 
+                 "GlobalSouthObserverNonSupporting" = "Global South - Support, Observer: ", 
+                 "GlobalSouthNonSupporting" = "Global South - No Support: ", 
+                 "GlobalSouthObserverNonSupporting" = "Global South - No Support, Observer: ",
+                 "BRICSSupporting" = "BRICS - Support: ", 
+                 "BRICSObserverSupporting" = "BRICS - Support, Observer: ", 
+                 "BRICSNonSupporting" = "BRICS - No Support: ", 
+                 "BRICSObserverNonSupporting" = "BRICS - No Support, Observer: ",
+                 "CorporatePresence" = "Not Participating", 
+                 "SpecialPresence" = "Not participating (special case)"
+                 )
+    ) +
+
+#    labels = LegendLabels) +
+  theme_minimal() +
+  theme(legend.text = element_text(size = 5),
+        legend.title = element_text(size = 5),
+        plot.title = element_text(face = "bold"),
+        axis.text.x = element_blank(),legend.position = "bottom") +
+        labs(title = MapTitle,
+        subtitle = MapSubtitle,
+        x = NULL, y = NULL,
+        caption = MapCaption)
+
+    return(DisplayMapReturnValue)
+}
+```
+
+
+  
+
+```{r DisplayMapProc3, include=FALSE}
+
+# Déclaration de la procédure --------------------------------------------------
+# DisplayMap
+
+DisplayMap3 <- function(world, target_crs, StatesGeometry1, FillClass1, StatesGeometry2, FillClass2, MapTitle, MapSubtitle, MapCaption, LegendTitle, LegendLabels, LegendPalette) {
+
+StatesGeometry1 <- cbind(StatesGeometry1, st_coordinates(st_centroid(StatesGeometry1)))
+StatesGeometry2 <- cbind(StatesGeometry2, st_coordinates(st_centroid(StatesGeometry2)))
+
+DisplayMapReturnValue <- world %>%
+  filter(admin != "Antarctica") %>%
+  st_transform(crs = target_crs) %>%
+  ggplot() +
+  geom_sf(color = "white", fill= "lightgrey") +
+  # geom_sf(data = StatesGeometry2, aes(fill = FillClass2), color ="white") +
+  # geom_sf(data = StatesGeometry1, aes(fill = FillClass1), color ="white") +
+  # coord_sf(datum = NA) + # no graticule
+  scale_fill_manual(values = c("bisque4", "bisque3", "darkseagreen", "cyan2", "bisque2", "cyan3", "darkseagreen4", "lightgrey", "lightgrey", "lightgrey", "lightgrey")) 
+  # scale_fill_discrete(name = LegendTitle, labels = LegendLabels)
+ 
+ theme_minimal() +
+  theme(legend.text = element_text(size = 5),
+        legend.title = element_text(size = 5),
+        plot.title = element_text(face = "bold"),
+        axis.text.x = element_blank(),legend.position = "bottom") +
+        labs(title = MapTitle,
+        subtitle = MapSubtitle,
+        x = NULL, y = NULL,
+        caption = MapCaption)
+  
+    return(DisplayMapReturnValue)
+}
+```
+
+
+
+```{r map_visited_states,  eval=FALSE, fig.width=15, fig.height=15}
+
+# message=FALSE, warning=FALSE, include=FALSE
+
+# Get World Map Data ---------------------------------------------------
+
+
+
+
+
+target_crs <- 3395
+
+
+
+visited_states_raw <- read_excel("./data/12.02_voyages_these-2024-06-06-c.xlsx", na = "NA") %>%
+  
+  clean_names() %>%
+  
+  select (1,2,12) %>%
+    
+  filter (!is.na(visite))
+
+
+world <- ne_countries(scale = 50, 
+                      returnclass = "sf")
+
+target_crs <- 4326
+
+
+
+visited_states_geo <- cbind(visited_states_geo, st_coordinates(st_centroid(visited_states_geo)))
+
+
+
+visited_states_map <- world %>%
+  
+  filter(admin != "Antarctica") %>%
+  
+  st_transform(crs = target_crs) %>%
+  
+      ggplot() +
+  
+      geom_sf(color = "white", 
+              linewidth  = 0.25,
+              fill= "lightgrey") +
+      
+      geom_sf(data = visited_states_geo,
+              aes(fill = visite > 0), 
+              fill = "red",
+              alpha = 7/10,
+              color ="white") +
+      
+      coord_sf(datum = NA) +
+      
+      scale_fill_viridis_d( option = "turbo",
+                          name = "") +
+                        
+      theme(legend.text = element_text(size = 5),
+            legend.title = element_text(size = 5),
+            panel.border = element_blank(),
+            plot.title = element_text(face = "bold"),
+            legend.position = "none",
+            axis.text.x = element_blank()) +
+            labs(title = "États dans lesquels j'ai travaillé sur ma thèse ",
+            subtitle = paste("Total:",
+                             nrow(visited_states_geo), 
+                             "États", 
+                             sep =" "),
+            x = NULL, 
+            y = NULL,
+            caption = "C. Bühlmann - 2024")
+      
+ 
+
+visited_states_map
+
+```
+
+
+```{r}
+
+world <- ne_countries(scale = 110) 
+small_scale_map <- ggplot() +
+  geom_sf(data = world) +
+  coord_sf(xlim = c(-20, 50), ylim = c(33, 80)) +
+  ggtitle("Europe")
+
+europe <- ne_countries(scale = 50, continent = "Europe") 
+medium_scale_map <- ggplot() +
+  geom_sf(data = europe) +
+  coord_sf(xlim = c(5, 30), ylim = c(55, 71)) +
+  ggtitle("Norden")
+
+# Need extra package for high resolution data
+# install.packages("rnaturalearthhires", repos = "https://ropensci.r-universe.dev")
+
+norway <- ne_countries(scale = 10, country = "Norway") 
+
+large_scale_map <- ggplot() +
+  geom_sf(data = norway) +
+  coord_sf(xlim = c(4, 9), ylim = c(59, 62)) +
+  ggtitle("Vestland")
+
+# combine maps with patchwork
+library(patchwork)
+small_scale_map + medium_scale_map + large_scale_map
+
+```
+
+
+```{r}
+library(ggspatial)
+ggplot() +
+  annotation_map_tile(
+    type = "osm", 
+    cachedir = "maps/", 
+    zoomin = -1) + # sets the zoom level relative to the default
+  coord_sf(
+    xlim = c(4.5, 6), 
+    ylim = c(60.5, 61),
+    crs = 4326) # EPSG code for WGS84
+
+```
+
